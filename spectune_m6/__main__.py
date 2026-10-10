@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import hashlib
 import importlib.metadata
 import json
+import os
 from pathlib import Path
 import platform
 import subprocess
@@ -128,8 +129,13 @@ def generate(bundle, context, prompt, max_tokens, memory_limit):
 
 
 def main():
+    if sys.argv[1:2] == ["serve"]:
+        from .serve import main as serve
+
+        return serve(sys.argv[2:])
     parser = argparse.ArgumentParser(
-        description="Qwen + DFlash2 with packed-Q4 kernels on M6."
+        description="Qwen + DFlash2 with packed-Q4 kernels on M6.",
+        epilog="Start the local API server: ./run serve (see serve --help).",
     )
     parser.add_argument(
         "prompt", nargs="?", help="Omit for terminal chat, or pipe a prompt on stdin."
@@ -173,8 +179,13 @@ def main():
 
     mx.synchronize()
     setup_s = time.perf_counter() - started
-    log_dir = Path(__file__).resolve().parent.parent / "logs"
-    log_dir.mkdir(exist_ok=True)
+    log_dir = (
+        Path(
+            os.environ.get("SPECTUNE_STATE_DIR", Path(__file__).resolve().parent.parent)
+        )
+        / "logs"
+    )
+    log_dir.mkdir(parents=True, exist_ok=True)
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S_%fZ")
     log = log_dir / run_id
     package_root = Path(__file__).resolve().parent
