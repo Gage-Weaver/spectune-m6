@@ -1,0 +1,17 @@
+[project]
+name = "spectune-m6"
+version = "0.1.0"
+description = "Qwen + DFlash2 with packed-Q4 kernels for Apple M6"
+requires-python = "==3.11.*"
+license = "Apache-2.0"
+dependencies = [
+    "mlx==0.32.2",
+    "mlx-metal==0.32.2",
+    "mlx-lm==0.31.3",
+    "transformers==5.17.0",
+    "dflash-mlx @ https://github.com/bstnxbt/dflash-mlx/archive/60803233af4589e18588b9bacbb03880801c828a.tar.gz",
+]
+
+[tool.uv]
+package = false
+environments = ["sys_platform == 'darwin' and platform_machine == 'arm64'"]

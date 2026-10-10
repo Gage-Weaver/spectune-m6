@@ -1,0 +1,43 @@
+#!/bin/bash
+set -euo pipefail
+root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+if [[ "$(uname -s)" != Darwin || "$(uname -m)" != arm64 ]]; then
+    echo "An Apple M6 Mac running a native arm64 terminal is required." >&2
+    exit 1
+fi
+chip="$(sysctl -n machdep.cpu.brand_string)"
+if [[ "$chip" != "Apple M6"* ]]; then
+    echo "This release supports M6 Macs. Detected: $chip." >&2
+    exit 1
+fi
+if [[ "$(sysctl -n hw.memsize)" -lt 34359738368 ]]; then
+    echo "At least 32 GB of unified memory is required." >&2
+    exit 1
+fi
+cache="${SPECTUNE_CACHE:-$root/.cache}"
+mkdir -p "$cache"
+cache="$(cd -- "$cache" && pwd)"
+export UV_CACHE_DIR="$cache/uv-cache"
+export UV_PYTHON_INSTALL_DIR="$cache/python"
+export HF_HOME="${HF_HOME:-$cache/huggingface}"
+export HF_HUB_DISABLE_TELEMETRY=1
+export TOKENIZERS_PARALLELISM=false
+export PYTHONUNBUFFERED=1
+export PYTHONPATH="$root"
+export UV_LINK_MODE=copy
+export UV_PROJECT_ENVIRONMENT="$root/.venv"
+uv_bin="$(command -v uv || true)"
+if [[ -z "$uv_bin" || "$("$uv_bin" --version)" != "uv 0.12.18"* ]]; then
+    uv_bin="$cache/bin/uv"
+    if [[ ! -x "$uv_bin" || "$("$uv_bin" --version)" != "uv 0.12.18"* ]]; then
+        echo "Installing uv 0.12.18…" >&2
+        installer="$(mktemp)"
+        trap 'rm -f "$installer"' EXIT
+        curl --proto '=https' --tlsv1.2 -LsSf https://astral.sh/uv/0.12.18/install.sh -o "$installer"
+        UV_UNMANAGED_INSTALL="$cache/bin" sh "$installer" >&2
+        rm -f "$installer"
+        trap - EXIT
+    fi
+fi
+cd "$root"
+exec "$uv_bin" run --locked --python 3.11.16 -m spectune_m6 "$@"

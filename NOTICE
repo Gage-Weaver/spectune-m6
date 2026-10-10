@@ -1,0 +1,12 @@
+SpecTune M6
+
+The verification kernel is derived from dflash-mlx verify_qmm.py,
+Copyright 2026 bstnxbt, licensed under Apache-2.0.
+https://github.com/bstnxbt/dflash-mlx
+
+Replay and prefill kernels generate modified MLX source at runtime.
+Copyright 2023–2025 Apple Inc., licensed under MIT.
+See licenses/MLX-MIT.txt.
+https://github.com/ml-explore/mlx
+
+SpecTune changes Q4 weight layout and read addresses, with tiled verification.
