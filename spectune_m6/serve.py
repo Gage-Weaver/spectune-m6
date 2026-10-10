@@ -26,7 +26,10 @@ def main(argv=None):
         parser.error("--max-tokens must be between 1 and 32768")
 
     from .__main__ import hardware, conditions
-    from .profile import load
+    from dataclasses import asdict
+
+    from .profile import BLOCK_SIZE, load
+    from dflash_mlx.engine.config import resolve_speculative_cycle_config
     from dflash_mlx import serve as upstream
     from dflash_mlx.runtime.context import with_metal_limits
     from dflash_mlx.server.tool_calls import install_tool_parser
@@ -42,6 +45,14 @@ def main(argv=None):
             context = with_metal_limits(
                 context, self.cli_args.runtime_context.metal_limits
             )
+            cycle = resolve_speculative_cycle_config(
+                context.runtime, bundle.draft_model, block_tokens=None
+            )
+            if (
+                cycle.effective_block_tokens != BLOCK_SIZE
+                or cycle.verify_len_cap != BLOCK_SIZE
+            ):
+                raise RuntimeError("Server did not resolve the fixed16 profile.")
             self.cli_args.runtime_context = context
             self.cli_args.runtime_config = context.runtime
             install_tool_parser(bundle.tokenizer)
@@ -80,6 +91,7 @@ def main(argv=None):
                 "draft": DRAFT,
                 "mode": "canonical" if args.canonical else "packed",
                 "runtime_context": str(context),
+                "cycle_config": asdict(cycle),
                 "setup_s": time.perf_counter() - started,
                 "packed_projections": len(state["projections"]) if state else 0,
                 "startup_parity": state["startup_parity"] if state else [],

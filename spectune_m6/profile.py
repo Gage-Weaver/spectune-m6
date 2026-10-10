@@ -98,6 +98,7 @@ def load(canonical=False):
     bundle.draft_model.capabilities = replace(
         bundle.draft_model.capabilities,
         max_block_tokens=BLOCK_SIZE,
+        default_block_tokens=BLOCK_SIZE,
     )
     state = (
         None
