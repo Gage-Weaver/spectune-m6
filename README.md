@@ -3,7 +3,14 @@
 Qwen3.8-27B Q4 + DFlash2 with packed-Q4 kernels for Apple M6.
 Requires an M6 Mac, 32 GB+ unified memory and macOS 26.2+.
 
-From this directory:
+Install with Homebrew:
+
+```sh
+brew install Gage-Weaver/tap/spectune-m6
+spectune-m6 serve
+```
+
+Or clone this repo and run from its directory:
 
 ```sh
 ./run
