@@ -34,6 +34,9 @@ def main(argv=None):
     from dflash_mlx.runtime.context import with_metal_limits
     from dflash_mlx.server.tool_calls import install_tool_parser
 
+    from .stream_compat import install as install_stream_compat
+
+    install_stream_compat()
     system = hardware()
 
     class PackedProvider(upstream.DFlashModelProvider):
@@ -103,6 +106,15 @@ def main(argv=None):
             return self.model, self.tokenizer
 
     class FixedProfileHandler(upstream.DFlashAPIHandler):
+        def generate_response(self, *args, **kwargs):
+            from .stream_compat import normalize_finish
+
+            response = super().generate_response(*args, **kwargs)
+            tools = self.body.get("tools")
+            if self.body.get("tool_choice") == "none":
+                tools = None
+            return normalize_finish(response, tools)
+
         def do_POST(self):
             self._completion_response_started = False
             try:

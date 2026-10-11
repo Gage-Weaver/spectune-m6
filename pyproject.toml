@@ -1,6 +1,6 @@
 [project]
 name = "spectune-m6"
-version = "0.2.1"
+version = "0.2.2"
 description = "Qwen + DFlash2 with packed-Q4 kernels for Apple M6"
 requires-python = "==3.11.*"
 license = "Apache-2.0"
